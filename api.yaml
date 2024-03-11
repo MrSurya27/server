@@ -1,0 +1,693 @@
+swagger: "2.0"
+info:
+  title: Claims Management System
+  description: |
+# The Claims Management System is a comprehensive platform developed as a bootcamp project by our company for training purposes. This system is designed to efficiently manage insurance claims, facilitating the entire process from submission to resolution. With intuitive interfaces for both users and administrators, it streamlines workflows, enhances communication, and ensures accuracy in claim processing.
+
+# Key Features:
+# - User-friendly interface for claim submission, tracking, and management.
+# - Role-based access control to ensure data security and privacy.
+  version: 1.0
+  contact:
+    email: surya.singh@lumiq.ai
+servers:
+  - url: "http://localhost:4000/"
+    description: This is my local server
+schemes: 
+  - http
+  - https
+tags:
+  - name: user
+    description: User Routes
+  - name: policy
+    description: Policy Routes
+  - name: claim
+    description: Claim Routes
+definitions:
+  PolicyInput:
+    type: object
+    properties:
+      policyType:
+        type: string
+      startDate:
+        type: string
+        format: date
+      endDate:
+        type: string
+        format: date
+      premiumAmount:
+        type: number
+      sumAssured:
+        type: number
+      termsAndConditions:
+        type: string
+      policyTerm:
+        type: string
+      paymentFrequency:
+        type: string
+      lastPaymentDate:
+        type: string
+        format: date
+    required:
+      - policyType
+      - startDate
+      - endDate
+      - premiumAmount
+      - sumAssured
+      - policyTerm
+      - paymentFrequency
+  ClaimInput:
+    type: object
+    properties:
+      policyId:
+        type: string
+      userId:
+        type: string
+      claimDate:
+        type: string
+        format: date
+      claimAmount:
+        type: number
+      description:
+        type: string
+      status:
+        type: string
+        enum:
+          - Pending
+          - Approved
+          - Rejected
+          - Reimbursed
+    required:
+      - policyId
+      - userId
+      - claimDate
+      - claimAmount
+      - description
+      - status
+  Policy:
+    type: object
+    properties:
+      _id:
+        type: string
+      policyType:
+        type: string
+      startDate:
+        type: string
+        format: date
+      endDate:
+        type: string
+        format: date
+      premiumAmount:
+        type: number
+      sumAssured:
+        type: number
+      termsAndConditions:
+        type: string
+      policyTerm:
+        type: string
+      paymentFrequency:
+        type: string
+      lastPaymentDate:
+        type: string
+        format: date
+  Claim:
+    type: object
+    properties:
+      _id:
+        type: string
+      policyId:
+        type: string
+      userId:
+        type: string
+      claimDate:
+        type: string
+        format: date
+      claimAmount:
+        type: number
+      description:
+        type: string
+      status:
+        type: string
+        enum:
+          - Pending
+          - Approved
+          - Rejected
+          - Reimbursed
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Registers a new user in the system.
+      tags:
+        - user
+      parameters:
+        - in: body
+          name: user
+          description: User object
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              email:
+                type: string
+              password:
+                type: string
+      responses:
+        201:
+          description: User registered successfully
+  /auth/login:
+    post:
+      summary: Log in user
+      description: Logs in a user with valid credentials.
+      tags:
+        - user
+      parameters:
+        - in: body
+          name: credentials
+          description: User credentials
+          required: true
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+      responses:
+        200:
+          description: User logged in successfully
+  /auth/logout:
+    get:
+      summary: Log out user
+      description: Logs out the currently authenticated user.
+      tags:
+        - user
+      responses:
+        200:
+          description: User logged out successfully
+  /auth/password/forgot:
+    post:
+      summary: Forgot password
+      description: Initiates the password reset process for a user.
+      tags:
+        - user
+      parameters:
+        - in: body
+          name: email
+          description: User's email address
+          required: true
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+      responses:
+        200:
+          description: Password reset email sent successfully
+  /password/reset/{token}:
+    put:
+      summary: Reset password
+      description: Resets the password for a user using a valid reset token.
+      tags:
+        - user
+      parameters:
+        - in: path
+          name: token
+          description: Password reset token
+          required: true
+          type: string
+        - in: body
+          name: password
+          description: New password
+          required: true
+          schema:
+            type: object
+            properties:
+              password:
+                type: string
+      responses:
+        200:
+          description: Password reset successful
+  /user:
+    get:
+      summary: Get user details
+      description: Retrieves details of the currently logged-in user.
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: User details retrieved successfully
+        401:
+          description: Unauthorized - User not authenticated
+    put:
+      summary: Update user profile
+      description: Updates the profile details of the currently logged-in user.
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: body
+          name: user
+          description: User object
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              email:
+                type: string
+      responses:
+        200:
+          description: User profile updated successfully
+        401:
+          description: Unauthorized - User not authenticated
+  /user/password:
+    put:
+      summary: Update user password
+      description: Updates the password of the currently logged-in user.
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: body
+          name: passwords
+          description: Old and new passwords
+          required: true
+          schema:
+            type: object
+            properties:
+              oldPassword:
+                type: string
+              newPassword:
+                type: string
+              confirmPassword:
+                type: string
+      responses:
+        200:
+          description: User password updated successfully
+        401:
+          description: Unauthorized - User not authenticated
+  /policy-holders:
+    get:
+      summary: Get all policy holders
+      description: Retrieves details of all policy holders.
+      tags:
+        - user
+      responses:
+        200:
+          description: Policy holders retrieved successfully
+  /change-role/{id}:
+    put:
+      summary: Change user role
+      description: Changes the role of a user identified by ID.
+      tags:
+        - user
+      parameters:
+        - in: path
+          name: id
+          description: User ID
+          required: true
+          type: string
+        - in: body
+          name: role
+          description: New user role
+          required: true
+          schema:
+            type: object
+            properties:
+              role:
+                type: string
+      responses:
+        200:
+          description: User role changed successfully
+  /policy:
+    post:
+      summary: Create a new policy
+      description: Creates a new policy in the system.
+      tags:
+        - policy
+      security:
+        - bearerAuth: []
+        - role: [admin]
+      parameters:
+        - in: body
+          name: policy
+          description: Policy object
+          required: true
+          schema:
+            $ref: '#/definitions/PolicyInput'
+      responses:
+        200:
+          description: Policy created successfully
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+              policy:
+                $ref: '#/definitions/Policy'
+        401:
+          description: Unauthorized - User not authenticated
+        403:
+          description: Forbidden - User does not have permission
+  /policies:
+    get:
+      summary: Get all policies
+      description: Retrieves details of all policies.
+      tags:
+        - policy
+      security:
+        - bearerAuth: []
+        - role: [admin,TPA]
+      responses:
+        200:
+          description: Policies retrieved successfully
+        500:
+          description: Error, Only TPA and admin are allowed to access this resource
+        401:
+          description: Unauthorized - User not authenticated
+        403:
+          description: Forbidden - User does not have permission
+  /user/policies:
+    get:
+      summary: Get all user policies
+      description: Retrieves details of all policies associated with the currently logged-in user.
+      tags:
+        - policy
+      security:
+        - bearerAuth: []
+        - role: [user]
+      responses:
+        200:
+          description: User policies retrieved successfully
+        401:
+          description: Unauthorized - User not authenticated
+  /policy/{id}:
+    get:
+      summary: Get a policy by ID
+      description: Retrieves details of a policy by its ID.
+      tags:
+        - policy
+      security:
+        - bearerAuth: []
+        - role: [user,TPA,admin]
+      parameters:
+        - in: path
+          name: id
+          description: Policy ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Policy retrieved successfully
+        401:
+          description: Unauthorized - User not authenticated
+    put:
+      summary: Update a policy by ID
+      description: Updates details of a policy by its ID.
+      tags:
+        - policy
+      security:
+        - bearerAuth: []
+        - role: [admin]
+      parameters:
+        - in: path
+          name: id
+          description: Policy ID
+          required: true
+          type: string
+        - in: body
+          name: policy
+          description: Policy object
+          required: true
+          schema:
+            $ref: '#/definitions/PolicyInput'
+      responses:
+        200:
+          description: Policy updated successfully
+        401:
+          description: Unauthorized - User not authenticated
+        403:
+          description: Forbidden - User does not have permission
+    delete:
+      summary: Delete a policy by ID
+      description: Deletes a policy by its ID.
+      tags:
+        - policy
+      security:
+        - bearerAuth: []
+        - role: [user]
+      parameters:
+        - in: path
+          name: id
+          description: Policy ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Policy deleted successfully
+        401:
+          description: Unauthorized - User not authenticated
+        403:
+          description: Forbidden - User does not have permission
+  /assign-policy/{id}:
+    post:
+      summary: Assign a policy to a user
+      description: Assigns a policy to a user by the policy ID.
+      tags:
+        - policy
+      security:
+        - bearerAuth: []
+        - role: [admin]
+      parameters:
+        - in: path
+          name: id
+          description: Policy ID
+          required: true
+          type: string
+        - in: body
+          name: email
+          description: User's email address
+          required: true
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+      responses:
+        200:
+          description: Policy assigned to user successfully
+        401:
+          description: Unauthorized - User not authenticated
+        403:
+          description: Forbidden - User does not have permission
+  /claims/{id}:
+    post:
+      summary: Create a new claim
+      description: Creates a new claim in the system.
+      tags:
+        - claim
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Policy ID
+          required: true
+          type: string
+        - in: body
+          name: claim
+          description: Claim object
+          required: true
+          schema:
+            $ref: '#/definitions/ClaimInput'
+      responses:
+        200:
+          description: Claim created successfully
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+              claim:
+                $ref: '#/definitions/Claim'
+        401:
+          description: Unauthorized - User not authenticated
+    get:
+      summary: Get a claim by ID
+      description: Retrieves details of a claim by its ID.
+      tags:
+        - claim
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Claim ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Claim retrieved successfully
+          schema:
+            $ref: '#/definitions/Claim'
+        401:
+          description: Unauthorized - User not authenticated
+    put:
+      summary: Update a claim by ID
+      description: Updates details of a claim by its ID.
+      tags:
+        - claim
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Claim ID
+          required: true
+          type: string
+        - in: body
+          name: claim
+          description: Claim object
+          required: true
+          schema:
+            $ref: '#/definitions/ClaimInput'
+      responses:
+        200:
+          description: Claim updated successfully
+          schema:
+            $ref: '#/definitions/Claim'
+        401:
+          description: Unauthorized - User not authenticated
+    delete:
+      summary: Delete a claim by ID
+      description: Deletes a claim by its ID.
+      tags:
+        - claim
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Claim ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Claim deleted successfully
+        401:
+          description: Unauthorized - User not authenticated
+  /claims:
+    get:
+      summary: Get all claims of logged-in user
+      description: Retrieves details of all claims associated with the currently logged-in user.
+      tags:
+        - claim
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Claims retrieved successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Claim'
+        401:
+          description: Unauthorized - User not authenticated
+  /TPA/claims:
+    get:
+      summary: Get all claims
+      description: Retrieves details of all claims. This route is only accessible to users with TPA or admin roles.
+      tags:
+        - claim
+      security:
+        - bearerAuth: []
+        - role: [TPA, admin]
+      parameters:
+        - in: query
+          name: role
+          description: User role
+          required: true
+          type: string
+          enum: [TPA, admin]
+      responses:
+        200:
+          description: Claims retrieved successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Claim'
+        401:
+          description: Unauthorized - User not authenticated
+        403:
+          description: Forbidden - User does not have permission
+  /TPA/claims/{id}:
+    get:
+      summary: Get a claim by ID
+      description: Retrieves details of a claim by its ID. This route is only accessible to users with TPA or admin roles.
+      tags:
+        - claim
+      security:
+        - bearerAuth: []
+        - role: [TPA, admin]
+      parameters:
+        - in: path
+          name: id
+          description: Claim ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Claim retrieved successfully
+          schema:
+            $ref: '#/definitions/Claim'
+        401:
+          description: Unauthorized - User not authenticated
+        403:
+          description: Forbidden - User does not have permission
+    put:
+      summary: Update the status of a claim by ID
+      description: Updates the status of a claim by its ID. This route is only accessible to users with TPA or admin roles.
+      tags:
+        - claim
+      security:
+        - bearerAuth: []
+        - role: [TPA, admin]
+      parameters:
+        - in: path
+          name: id
+          description: Claim ID
+          required: true
+          type: string
+        - in: body
+          name: claimStatus
+          description: Claim status object
+          required: true
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: [Pending, Approved, Rejected]
+      responses:
+        200:
+          description: Claim status updated successfully
+          schema:
+            $ref: '#/definitions/Claim'
+        401:
+          description: Unauthorized - User not authenticated
+        403:
+          description: Forbidden - User does not have permission
